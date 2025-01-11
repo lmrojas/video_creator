@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ project.title }}</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Estado del Proyecto</h5>
+                    <div id="status-container">
+                        <p>Estado: <span id="project-status">{{ project.get_status_display }}</span></p>
+                        <div class="progress mb-3">
+                            <div id="progress-bar" 
+                                class="progress-bar" 
+                                role="progressbar" 
+                                style="width: {{ project.progress }}%;"
+                                aria-valuenow="{{ project.progress }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100">
+                                {{ project.progress }}%
+                            </div>
+                        </div>
+                        <div id="error-message" class="alert alert-danger d-none"></div>
+                    </div>
+                    
+                    <div id="video-container" class="mt-4{% if not project.output_video %} d-none{% endif %}">
+                        <h5>Video Generado</h5>
+                        {% if project.output_video %}
+                        <video id="output-video" class="w-100" controls>
+                            <source src="{{ project.output_video.url }}" type="video/mp4">
+                            Tu navegador no soporta el elemento de video.
+                        </video>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Detalles</h5>
+                    <p><strong>Creado:</strong> {{ project.created_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Última actualización:</strong> {{ project.updated_at|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Plantilla:</strong> {{ project.template.name }}</p>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'project_edit' project.id %}" class="btn btn-primary">Editar</a>
+                        <a href="{% url 'project_delete' project.id %}" class="btn btn-danger">Eliminar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'video_app/js/websocket.js' %}"></script>
+<script type="text/javascript">
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        var projectId = {{ project.id }};
+        var socket = new VideoProcessingSocket(projectId);
+        var statusElement = document.getElementById('project-status');
+        var progressBar = document.getElementById('progress-bar');
+        var errorMessage = document.getElementById('error-message');
+        var videoContainer = document.getElementById('video-container');
+        var outputVideo = document.getElementById('output-video');
+        
+        function updateProgressBar(progress) {
+            progressBar.style.width = progress + '%';
+            progressBar.setAttribute('aria-valuenow', progress);
+            progressBar.textContent = progress + '%';
+        }
+        
+        function updateStatus(status) {
+            var statusMap = {
+                pending: 'Pendiente',
+                processing: 'Procesando',
+                completed: 'Completado',
+                failed: 'Fallido',
+                cancelled: 'Cancelado'
+            };
+            statusElement.textContent = statusMap[status] || status;
+        }
+        
+        function showVideoPlayer(videoUrl) {
+            videoContainer.classList.remove('d-none');
+            var videoSource = outputVideo.querySelector('source');
+            if (videoSource.src !== videoUrl) {
+                videoSource.src = videoUrl;
+                outputVideo.load();
+            }
+        }
+        
+        function showErrorMessage(error) {
+            errorMessage.textContent = error;
+            errorMessage.classList.remove('d-none');
+        }
+        
+        socket.onStatusUpdate(function(data) {
+            updateStatus(data.status);
+            updateProgressBar(data.progress);
+            
+            if (data.error_message) {
+                showErrorMessage(data.error_message);
+            } else {
+                errorMessage.classList.add('d-none');
+            }
+            
+            if (data.output_video) {
+                showVideoPlayer(data.output_video);
+            }
+        });
+        
+        socket.onError(function(error) {
+            showErrorMessage(error);
+        });
+        
+        socket.connect();
+        
+        window.addEventListener('beforeunload', function() {
+            socket.disconnect();
+        });
+    });
+})();
+</script>
+{% endblock %} 

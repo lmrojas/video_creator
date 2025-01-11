@@ -1,0 +1,232 @@
+{% extends "video_app/wizard/base_wizard.html" %}
+{% load crispy_forms_tags %}
+
+{% block wizard_content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Subida de Medios</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" id="media-form">
+            {% csrf_token %}
+            
+            <div class="upload-section">
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                        <p class="upload-text">
+                            Arrastra y suelta tus archivos aquí<br>
+                            <small>o</small>
+                        </p>
+                        {{ form.base_media|as_crispy_field }}
+                    </div>
+                    
+                    <div class="upload-preview d-none" id="upload-preview">
+                        <video controls class="preview-video">
+                            <source src="" type="video/mp4">
+                            Tu navegador no soporta la reproducción de video.
+                        </video>
+                        
+                        <div class="preview-info">
+                            <p class="file-name"></p>
+                            <p class="file-size"></p>
+                            <button type="button" class="btn btn-danger btn-sm" id="remove-file">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="upload-requirements alert alert-info mt-3">
+                    <h5><i class="fas fa-info-circle"></i> Requisitos del archivo</h5>
+                    <ul>
+                        <li>Formatos soportados: MP4, MOV, AVI</li>
+                        <li>Tamaño máximo: 500MB</li>
+                        <li>Resolución recomendada: 1920x1080 (Full HD)</li>
+                        <li>Duración máxima: 60 minutos</li>
+                    </ul>
+                </div>
+                
+                <div class="upload-error alert alert-danger d-none" id="upload-error">
+                    <!-- Los errores se mostrarán aquí -->
+                </div>
+            </div>
+            
+            <div class="form-text text-muted mb-3">
+                Sube el video base que quieres procesar. Este paso es opcional.
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                Siguiente <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .upload-area {
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+    
+    .upload-area.dragover {
+        border-color: #007bff;
+        background: #e7f1ff;
+    }
+    
+    .upload-content {
+        color: #666;
+    }
+    
+    .upload-text {
+        margin: 1rem 0;
+    }
+    
+    .upload-text small {
+        display: block;
+        margin: 0.5rem 0;
+        color: #999;
+    }
+    
+    .preview-video {
+        max-width: 100%;
+        max-height: 300px;
+        margin-bottom: 1rem;
+    }
+    
+    .preview-info {
+        text-align: left;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .file-name {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .file-size {
+        color: #666;
+        margin-bottom: 1rem;
+    }
+    
+    .upload-requirements ul {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('id_base_media');
+    const uploadPreview = document.getElementById('upload-preview');
+    const previewVideo = uploadPreview.querySelector('.preview-video');
+    const fileName = uploadPreview.querySelector('.file-name');
+    const fileSize = uploadPreview.querySelector('.file-size');
+    const removeButton = document.getElementById('remove-file');
+    const uploadError = document.getElementById('upload-error');
+    
+    // Prevenir comportamiento por defecto del drag & drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    // Resaltar área de drop
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        uploadArea.classList.add('dragover');
+    }
+    
+    function unhighlight(e) {
+        uploadArea.classList.remove('dragover');
+    }
+    
+    // Manejar archivo soltado
+    uploadArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const file = dt.files[0];
+        
+        handleFile(file);
+    }
+    
+    // Manejar selección de archivo
+    fileInput.addEventListener('change', function() {
+        handleFile(this.files[0]);
+    });
+    
+    function handleFile(file) {
+        if (!file) return;
+        
+        // Validar tipo de archivo
+        if (!file.type.startsWith('video/')) {
+            showError('El archivo debe ser un video');
+            return;
+        }
+        
+        // Validar tamaño
+        if (file.size > 500 * 1024 * 1024) {
+            showError('El archivo excede el tamaño máximo permitido (500MB)');
+            return;
+        }
+        
+        // Mostrar preview
+        const url = URL.createObjectURL(file);
+        previewVideo.src = url;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        uploadPreview.classList.remove('d-none');
+        uploadError.classList.add('d-none');
+    }
+    
+    // Eliminar archivo
+    removeButton.addEventListener('click', function() {
+        fileInput.value = '';
+        uploadPreview.classList.add('d-none');
+        previewVideo.src = '';
+    });
+    
+    function showError(message) {
+        uploadError.textContent = message;
+        uploadError.classList.remove('d-none');
+        fileInput.value = '';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+});
+</script>
+{% endblock %} 

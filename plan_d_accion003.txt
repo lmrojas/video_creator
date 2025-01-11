@@ -1,0 +1,32 @@
+1. Problemas de Importación y Coherencia
+Hay un conflicto en forms/__init__.py - está intentando importar ProjectBasicInfoForm pero la clase se llama ProjectBasicForm
+Posibles importaciones circulares entre views y forms
+Falta documentación en varios módulos
+2. Estructura de URLs y Endpoints
+Revisar y unificar la estructura de URLs
+Documentar todos los endpoints disponibles
+Implementar manejo de errores consistente
+3. Modelos y Base de Datos
+1. Agregar índices para optimizar consultas frecuentes
+Implementar validaciones de modelo faltantes
+Revisar y optimizar las relaciones entre modelos
+4. Formularios y Validación
+1. Unificar el estilo de los widgets de formularios
+Implementar validación de archivos más robusta
+Agregar mensajes de error personalizados
+5. Vistas y Templates
+Implementar manejo de permisos consistente
+Agregar breadcrumbs para mejor navegación
+Optimizar consultas en las vistas de lista
+6. Servicios y Tareas Asíncronas
+Configurar correctamente Redis para Celery
+Implementar manejo de errores en tareas asíncronas
+Agregar monitoreo de tareas
+7. Seguridad
+Implementar rate limiting
+Agregar validación de CSRF en endpoints relevantes
+Revisar permisos de usuario
+8. Testing
+Crear tests unitarios para modelos
+Implementar tests de integración
+Agregar tests de endpoints API

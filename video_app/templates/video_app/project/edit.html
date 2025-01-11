@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="project-edit-container">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'dashboard' %}">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'project_list' %}">Proyectos</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'project_detail' project.id %}">{{ project.title }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">Editar</li>
+                </ol>
+            </nav>
+            <h1>Editar Proyecto</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Información Básica -->
+                        <div class="mb-4">
+                            <h5>Información Básica</h5>
+                            <hr>
+                            {{ form.title|crispy }}
+                            {{ form.description|crispy }}
+                        </div>
+                        
+                        <!-- Script y Media -->
+                        <div class="mb-4">
+                            <h5>Contenido</h5>
+                            <hr>
+                            {{ form.script|crispy }}
+                            
+                            {% if form.base_media %}
+                            <div class="mb-3">
+                                {{ form.base_media|crispy }}
+                                {% if project.base_media %}
+                                <div class="current-media mt-2">
+                                    <p class="text-muted">Video base actual:</p>
+                                    <video controls class="img-thumbnail" style="max-width: 200px;">
+                                        <source src="{{ project.base_media.url }}" type="video/mp4">
+                                        Tu navegador no soporta la reproducción de video.
+                                    </video>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Configuración -->
+                        <div class="mb-4">
+                            <h5>Configuración</h5>
+                            <hr>
+                            {{ form.template|crispy }}
+                            {{ form.settings|crispy }}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Estado Actual -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Estado Actual</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-{{ project.get_status_color }} me-2">
+                            {{ project.get_status_display }}
+                        </span>
+                        <small class="text-muted">
+                            Última actualización: {{ project.updated_at|timesince }}
+                        </small>
+                    </div>
+                    
+                    {% if project.status == 'processing' %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Los cambios no se aplicarán hasta que finalice el procesamiento actual.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Ayuda -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Consejos de Edición</h5>
+                </div>
+                <div class="card-body">
+                    <div class="tips-list">
+                        <div class="tip-item">
+                            <i class="fas fa-lightbulb text-warning"></i>
+                            <p>Mantén el script conciso y claro para mejores resultados.</p>
+                        </div>
+                        <div class="tip-item">
+                            <i class="fas fa-film text-info"></i>
+                            <p>Los videos base deben tener buena calidad y resolución.</p>
+                        </div>
+                        <div class="tip-item">
+                            <i class="fas fa-cog text-primary"></i>
+                            <p>Ajusta la configuración según el tipo de contenido que deseas generar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .project-edit-container {
+        padding: 2rem;
+    }
+    
+    .tips-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .tip-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .tip-item i {
+        margin-top: 0.25rem;
+    }
+    
+    .tip-item p {
+        margin: 0;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %} 

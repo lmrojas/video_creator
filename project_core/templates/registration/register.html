@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Registro - Video Creator{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm mt-5">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.first_name|crispy }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.last_name|crispy }}
+                            </div>
+                        </div>
+                        
+                        {{ form.username|crispy }}
+                        {{ form.email|crispy }}
+                        {{ form.password1|crispy }}
+                        {{ form.password2|crispy }}
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                Acepto los <a href="#" class="text-decoration-none">términos y condiciones</a>
+                                y la <a href="#" class="text-decoration-none">política de privacidad</a>
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-user-plus me-2"></i>Crear Cuenta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    ¿Ya tienes una cuenta? 
+                    <a href="{% url 'login' %}" class="text-decoration-none">Inicia Sesión</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .btn-success {
+        padding: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #198754;
+    }
+    
+    .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+</style>
+{% endblock %} 

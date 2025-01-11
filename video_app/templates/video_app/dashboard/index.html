@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Encabezado -->
+    <div class="dashboard-header mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1>Dashboard</h1>
+                <p class="text-muted">Bienvenido, {{ request.user.get_full_name|default:request.user.username }}</p>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'wizard_start' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Proyecto
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-primary">
+                    <i class="fas fa-film"></i>
+                </div>
+                <div class="stats-info">
+                    <h3>{{ user_analytics.total_projects }}</h3>
+                    <p>Proyectos Totales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-info">
+                    <h3>{{ user_analytics.completed_projects|default:0 }}</h3>
+                    <p>Proyectos Completados</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stats-info">
+                    <h3>{{ user_analytics.in_progress|default:0 }}</h3>
+                    <p>En Progreso</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-info">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <div class="stats-info">
+                    <h3>{{ user_analytics.this_month|default:0 }}</h3>
+                    <p>Este Mes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Proyectos Recientes y Recomendaciones -->
+    <div class="row">
+        <!-- Proyectos Recientes -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Proyectos Recientes</h5>
+                    <a href="{% url 'project_list' %}" class="btn btn-sm btn-outline-primary">
+                        Ver Todos
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_projects %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Estado</th>
+                                    <th>Última Actualización</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for project in recent_projects %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'project_detail' project.id %}">
+                                            {{ project.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ project.get_status_color }}">
+                                            {{ project.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ project.updated_at|timesince }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'project_detail' project.id %}" 
+                                               class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'project_edit' project.id %}"
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">No hay proyectos recientes</p>
+                        <a href="{% url 'wizard_start' %}" class="btn btn-primary">
+                            Crear Primer Proyecto
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Gráfico de Actividad -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Actividad Reciente</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recomendaciones -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Plantillas Recomendadas</h5>
+                </div>
+                <div class="card-body">
+                    {% if template_recommendations %}
+                    <div class="template-recommendations">
+                        {% for template in template_recommendations %}
+                        <div class="template-card">
+                            <div class="template-preview">
+                                {% if template.preview_image %}
+                                <img src="{{ template.preview_image.url }}" alt="{{ template.name }}">
+                                {% else %}
+                                <img src="{% static 'img/default-template.png' %}" alt="Vista previa no disponible">
+                                {% endif %}
+                            </div>
+                            <div class="template-info">
+                                <h6>{{ template.name }}</h6>
+                                <p class="text-muted small">{{ template.description|truncatechars:100 }}</p>
+                                <a href="{% url 'wizard_start' %}?template={{ template.id }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    Usar Plantilla
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No hay recomendaciones disponibles</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        padding: 2rem;
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .stats-info h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .stats-info p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+    
+    .template-recommendations {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .template-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .template-preview img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+    }
+    
+    .template-info {
+        padding: 1rem;
+    }
+    
+    .template-info h6 {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar gráfico de actividad
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    const activityData = {{ user_analytics.projects_by_day|safe }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Object.keys(activityData),
+            datasets: [{
+                label: 'Proyectos',
+                data: Object.values(activityData),
+                borderColor: '#007bff',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

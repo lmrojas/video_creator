@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="wizard-container">
+    <!-- Barra de progreso -->
+    <div class="progress mb-4">
+        <div class="progress-bar" role="progressbar" style="width: {{ current_step|default:1|multiply:20 }}%">
+            Paso {{ current_step|default:1 }} de 5
+        </div>
+    </div>
+    
+    <!-- Pasos del asistente -->
+    <div class="wizard-steps mb-4">
+        <div class="step {% if current_step >= 1 %}active{% endif %}">
+            <span class="step-number">1</span>
+            <span class="step-title">Información Básica</span>
+        </div>
+        <div class="step {% if current_step >= 2 %}active{% endif %}">
+            <span class="step-number">2</span>
+            <span class="step-title">Plantilla</span>
+        </div>
+        <div class="step {% if current_step >= 3 %}active{% endif %}">
+            <span class="step-number">3</span>
+            <span class="step-title">Script</span>
+        </div>
+        <div class="step {% if current_step >= 4 %}active{% endif %}">
+            <span class="step-number">4</span>
+            <span class="step-title">Medios</span>
+        </div>
+        <div class="step {% if current_step >= 5 %}active{% endif %}">
+            <span class="step-number">5</span>
+            <span class="step-title">Confirmación</span>
+        </div>
+    </div>
+    
+    <!-- Contenido del paso actual -->
+    <div class="wizard-content">
+        {% block wizard_content %}{% endblock %}
+    </div>
+    
+    <!-- Navegación -->
+    <div class="wizard-navigation mt-4">
+        {% if current_step > 1 %}
+        <a href="{% url 'wizard_step'|add:current_step|add:'-1' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Anterior
+        </a>
+        {% endif %}
+        
+        {% block wizard_navigation %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/wizard.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/wizard.js' %}"></script>
+{% endblock %} 

@@ -1,0 +1,151 @@
+{% extends "video_app/wizard/base_wizard.html" %}
+{% load crispy_forms_tags %}
+
+{% block wizard_content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Escritura del Script</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" id="script-form">
+            {% csrf_token %}
+            
+            <div class="script-editor">
+                {{ form.script|as_crispy_field }}
+                
+                <div class="script-tools mb-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-check-spelling">
+                        <i class="fas fa-spell-check"></i> Revisar Ortografía
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-generate-suggestions">
+                        <i class="fas fa-magic"></i> Sugerencias AI
+                    </button>
+                    
+                    <span class="word-count text-muted">
+                        <i class="fas fa-font"></i> <span id="word-count">0</span> palabras
+                    </span>
+                </div>
+                
+                <div class="alert alert-info script-tips">
+                    <h5><i class="fas fa-lightbulb"></i> Tips para un buen script</h5>
+                    <ul>
+                        <li>Mantén las oraciones cortas y claras</li>
+                        <li>Usa un lenguaje natural y conversacional</li>
+                        <li>Incluye pausas y transiciones</li>
+                        <li>Considera el tiempo estimado del video</li>
+                    </ul>
+                </div>
+                
+                <div id="suggestions-panel" class="d-none">
+                    <h5>Sugerencias de Mejora</h5>
+                    <div class="suggestions-content">
+                        <!-- Las sugerencias se cargarán dinámicamente -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-text text-muted mb-3">
+                Escribe el script que se utilizará para generar el audio de tu video.
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                Siguiente <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .script-editor {
+        margin-bottom: 2rem;
+    }
+    
+    .script-tools {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .word-count {
+        margin-left: auto;
+    }
+    
+    .script-tips {
+        font-size: 0.9rem;
+    }
+    
+    .script-tips ul {
+        margin-bottom: 0;
+    }
+    
+    #suggestions-panel {
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .suggestions-content {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scriptTextarea = document.querySelector('#id_script');
+    const wordCountElement = document.querySelector('#word-count');
+    const checkSpellingBtn = document.querySelector('#btn-check-spelling');
+    const generateSuggestionsBtn = document.querySelector('#btn-generate-suggestions');
+    const suggestionsPanel = document.querySelector('#suggestions-panel');
+    
+    // Actualizar contador de palabras
+    function updateWordCount() {
+        const text = scriptTextarea.value.trim();
+        const wordCount = text ? text.split(/\s+/).length : 0;
+        wordCountElement.textContent = wordCount;
+    }
+    
+    // Revisar ortografía
+    function checkSpelling() {
+        // TODO: Implementar revisión de ortografía
+        alert('Función de revisión de ortografía en desarrollo');
+    }
+    
+    // Generar sugerencias
+    async function generateSuggestions() {
+        const text = scriptTextarea.value.trim();
+        if (!text) {
+            alert('Por favor, escribe algo en el script primero');
+            return;
+        }
+        
+        try {
+            // TODO: Implementar llamada a API de sugerencias
+            suggestionsPanel.classList.remove('d-none');
+            const suggestionsContent = suggestionsPanel.querySelector('.suggestions-content');
+            suggestionsContent.innerHTML = '<p>Analizando script...</p>';
+            
+        } catch (error) {
+            console.error('Error al generar sugerencias:', error);
+            alert('Error al generar sugerencias. Por favor, intenta de nuevo.');
+        }
+    }
+    
+    // Event listeners
+    scriptTextarea.addEventListener('input', updateWordCount);
+    checkSpellingBtn.addEventListener('click', checkSpelling);
+    generateSuggestionsBtn.addEventListener('click', generateSuggestions);
+    
+    // Inicializar contador
+    updateWordCount();
+});
+</script>
+{% endblock %} 

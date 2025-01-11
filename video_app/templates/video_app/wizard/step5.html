@@ -1,0 +1,107 @@
+{% extends "video_app/wizard/base_wizard.html" %}
+{% load crispy_forms_tags %}
+
+{% block wizard_content %}
+<div class="card">
+    <div class="card-header">
+        <h3>Confirmación del Proyecto</h3>
+    </div>
+    <div class="card-body">
+        <div class="project-summary mb-4">
+            <h4>Resumen del Proyecto</h4>
+            
+            <div class="summary-item">
+                <strong>Título:</strong>
+                <span>{{ project.title }}</span>
+            </div>
+            
+            <div class="summary-item">
+                <strong>Descripción:</strong>
+                <p>{{ project.description }}</p>
+            </div>
+            
+            <div class="summary-item">
+                <strong>Plantilla:</strong>
+                <span>{{ project.template.name }}</span>
+            </div>
+            
+            <div class="summary-item">
+                <strong>Duración Estimada:</strong>
+                <span>{{ project.template.estimated_duration }} segundos</span>
+            </div>
+            
+            {% if project.base_media %}
+            <div class="summary-item">
+                <strong>Video Base:</strong>
+                <span>{{ project.base_media.name }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="summary-item">
+                <strong>Script:</strong>
+                <div class="script-preview">
+                    {{ project.script|linebreaks }}
+                </div>
+            </div>
+        </div>
+        
+        <form method="post" id="confirmation-form">
+            {% csrf_token %}
+            
+            <div class="processing-options mb-4">
+                <h4>Opciones de Procesamiento</h4>
+                {{ form|crispy }}
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                Una vez confirmado, comenzará el procesamiento de tu video.
+                Podrás seguir el progreso en tiempo real.
+            </div>
+            
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-check"></i> Confirmar y Procesar
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .project-summary {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+    }
+    
+    .summary-item {
+        margin-bottom: 1.5rem;
+    }
+    
+    .summary-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .summary-item strong {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+    
+    .script-preview {
+        background: white;
+        padding: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .processing-options {
+        border-top: 1px solid #dee2e6;
+        padding-top: 1.5rem;
+    }
+</style>
+{% endblock %} 

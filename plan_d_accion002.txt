@@ -1,0 +1,21 @@
+Próximos Pasos:
+Fase 1 - Estructura Base:
+Completar modelos de VideoScene y VideoElement
+Implementar migraciones
+Configurar admin.py para todos los modelos
+2. Fase 2 - Autenticación:
+Completar sistema de login/registro
+Implementar recuperación de contraseña
+Añadir decoradores de permisos
+Fase 3 - Dashboard:
+Implementar vista de dashboard
+Crear templates con Bootstrap 5
+Añadir estadísticas básicas
+Fase 4 - Wizard:
+Implementar wizard paso a paso
+Crear formularios para cada paso
+Añadir validación de datos
+Fase 5 - Servicios:
+Implementar servicios de IA
+Configurar Celery para tareas asíncronas
+Implementar sistema de caché

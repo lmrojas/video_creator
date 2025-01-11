@@ -1,0 +1,9 @@
+Próximos pasos según el plan:
+Servicios de IA:
+Text-to-Speech
+Recomendaciones
+Generación de texto
+Interfaz de Usuario:
+Wizard paso a paso
+Previsualizaciones
+Dashboard
