@@ -211,3 +211,25 @@ class VideoElement(models.Model):
     def size(self):
         """Retorna el tamaño como un diccionario."""
         return {"width": self.width, "height": self.height}
+
+class AudioElement(models.Model):
+    AUDIO_TYPES = [
+        ('tts', 'Text to Speech'),
+        ('upload', 'Uploaded Audio'),
+        ('music', 'Background Music'),
+    ]
+    
+    scene = models.ForeignKey('VideoScene', on_delete=models.CASCADE, related_name='audio_elements')
+    audio_type = models.CharField(max_length=10, choices=AUDIO_TYPES)
+    content = models.FileField(upload_to='audio_elements/', null=True, blank=True)
+    text_content = models.TextField(null=True, blank=True)
+    voice_id = models.CharField(max_length=100, null=True, blank=True)
+    start_time = models.FloatField(default=0.0)
+    end_time = models.FloatField(null=True, blank=True)
+    volume = models.FloatField(default=1.0)
+    
+    class Meta:
+        ordering = ['start_time']
+    
+    def __str__(self):
+        return f"{self.get_audio_type_display()} - {self.scene.project.title}"

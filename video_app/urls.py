@@ -3,6 +3,9 @@
 
 from django.urls import path
 from .views import auth, wizard, dashboard, project
+from .views.project import GenerateAudioView
+from .views.recommendations import GetRecommendationsView
+from .views.text_generation import GenerateScriptView, GenerateDescriptionView
 
 app_name = 'video_app'
 
@@ -26,4 +29,12 @@ urlpatterns = [
     # Rutas de gestión de proyectos
     path('project/<int:pk>/edit/', project.ProjectUpdateView.as_view(), name='project_edit'),  # Edición
     path('project/<int:pk>/delete/', project.ProjectDeleteView.as_view(), name='project_delete'),  # Eliminación
+    path('scene/<int:scene_id>/generate-audio/', GenerateAudioView.as_view(), name='generate_audio'),  # Generación de audio
+    
+    # Rutas de recomendaciones
+    path('project/<int:project_id>/recommendations/', GetRecommendationsView.as_view(), name='get_recommendations'),  # Obtener recomendaciones
+    
+    # Rutas de generación de texto
+    path('project/<int:project_id>/generate-script/', GenerateScriptView.as_view(), name='generate_script'),  # Generar script
+    path('project/<int:project_id>/generate-description/', GenerateDescriptionView.as_view(), name='generate_description'),  # Generar descripción
 ] 

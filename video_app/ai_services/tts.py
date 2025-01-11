@@ -1,84 +1,92 @@
-from TTS.api import TTS
 import os
+from pathlib import Path
+import pyttsx3
 from django.conf import settings
-import torch
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TTSService:
+    """Servicio de Text-to-Speech para generar audio a partir de texto."""
+    
     def __init__(self):
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        # Inicializamos TTS con un modelo multilingüe
-        self.tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2").to(self.device)
+        self.output_path = os.path.join(settings.MEDIA_ROOT, 'audio_elements')
+        Path(self.output_path).mkdir(parents=True, exist_ok=True)
+        self.engine = pyttsx3.init()
+        self.available_voices = self._get_available_voices()
+        self._init_engine()
+    
+    def _init_engine(self):
+        """Inicializa el motor TTS con configuración por defecto."""
+        try:
+            self.engine.setProperty('rate', 150)    # Velocidad de habla
+            self.engine.setProperty('volume', 1.0)  # Volumen (0.0 a 1.0)
+            
+            # Establecer voz por defecto en español si está disponible
+            spanish_voice = next(
+                (v for v in self.available_voices if 'spanish' in v['name'].lower()),
+                None
+            )
+            if spanish_voice:
+                self.engine.setProperty('voice', spanish_voice['id'])
+        except Exception as e:
+            logger.error(f"Error initializing TTS engine: {str(e)}")
+    
+    def _get_available_voices(self):
+        """Obtiene la lista de voces disponibles."""
+        try:
+            voices = []
+            for voice in self.engine.getProperty('voices'):
+                voices.append({
+                    'id': voice.id,
+                    'name': voice.name,
+                    'languages': voice.languages,
+                    'gender': voice.gender
+                })
+            return voices
+        except Exception as e:
+            logger.error(f"Error getting available voices: {str(e)}")
+            return []
+    
+    def change_voice(self, voice_id):
+        """Cambia la voz del motor TTS."""
+        try:
+            self.engine.setProperty('voice', voice_id)
+            return True
+        except Exception as e:
+            logger.error(f"Error changing voice to {voice_id}: {str(e)}")
+            return False
+    
+    def generate_audio(self, text, voice_id=None, output_filename=None):
+        """
+        Genera un archivo de audio a partir de texto.
         
-    def generate_audio(self, text, language='es', output_path=None):
-        """
-        Genera audio a partir de texto
+        Args:
+            text (str): Texto a convertir en audio
+            voice_id (str, optional): ID de la voz a utilizar
+            output_filename (str, optional): Nombre del archivo de salida
+            
+        Returns:
+            str: Ruta al archivo de audio generado
         """
         try:
-            if output_path is None:
-                output_path = os.path.join(settings.MEDIA_ROOT, 'generated_audio', 'temp.wav')
-                
-            # Aseguramos que el directorio existe
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            if voice_id:
+                self.change_voice(voice_id)
             
-            # Generamos el audio
-            self.tts.tts_to_file(
-                text=text,
-                file_path=output_path,
-                language=language,
-                speaker_wav=None  # Se puede añadir un archivo de voz de referencia
-            )
+            if not output_filename:
+                output_filename = f"tts_{hash(text)}.wav"
+            
+            output_path = os.path.join(self.output_path, output_filename)
+            
+            # Generar el audio
+            self.engine.save_to_file(text, output_path)
+            self.engine.runAndWait()
             
             return output_path
         except Exception as e:
-            print(f"Error en la generación de audio: {str(e)}")
-            return None
-            
-    def generate_voice_clone(self, text, reference_audio_path, output_path=None):
-        """
-        Genera audio clonando una voz de referencia
-        """
-        try:
-            if output_path is None:
-                output_path = os.path.join(settings.MEDIA_ROOT, 'generated_audio', 'cloned.wav')
-                
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            
-            # Generamos el audio con la voz clonada
-            self.tts.tts_to_file(
-                text=text,
-                file_path=output_path,
-                speaker_wav=reference_audio_path
-            )
-            
-            return output_path
-        except Exception as e:
-            print(f"Error en la clonación de voz: {str(e)}")
-            return None
-            
-    def generate_multiple_voices(self, script_parts, language='es'):
-        """
-        Genera audio para múltiples partes de un script con diferentes voces
-        """
-        audio_files = []
-        try:
-            for i, (speaker, text) in enumerate(script_parts):
-                output_path = os.path.join(
-                    settings.MEDIA_ROOT, 
-                    'generated_audio', 
-                    f'part_{i}.wav'
-                )
-                
-                # Podemos variar parámetros para cada voz
-                self.tts.tts_to_file(
-                    text=text,
-                    file_path=output_path,
-                    language=language,
-                    speaker_wav=None
-                )
-                
-                audio_files.append(output_path)
-                
-            return audio_files
-        except Exception as e:
-            print(f"Error en la generación de múltiples voces: {str(e)}")
-            return None 
+            logger.error(f"Error generating audio: {str(e)}")
+            raise
+    
+    def get_available_voices(self):
+        """Retorna la lista de voces disponibles."""
+        return self.available_voices 
