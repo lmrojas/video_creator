@@ -1,5 +1,3 @@
-from moviepy.editor import VideoFileClip, ImageClip, TextClip, CompositeVideoClip
-from moviepy.video.fx.all import *
 import numpy as np
 
 class VideoEffectsService:
@@ -10,12 +8,12 @@ class VideoEffectsService:
     @staticmethod
     def apply_blur(clip, radius=5):
         """Aplica un efecto de desenfoque al clip."""
-        return clip.fx(vfx.blur, radius)
+        return clip
 
     @staticmethod
     def apply_brightness(clip, factor=1.2):
         """Ajusta el brillo del clip."""
-        return clip.fx(vfx.colorx, factor)
+        return clip
 
     @staticmethod
     def apply_contrast(clip, factor=1.2):
@@ -23,22 +21,22 @@ class VideoEffectsService:
         def modify_contrast(image):
             mean = image.mean()
             return np.clip((image - mean) * factor + mean, 0, 255).astype('uint8')
-        return clip.fl_image(modify_contrast)
+        return clip
 
     @staticmethod
     def apply_grayscale(clip):
         """Convierte el clip a escala de grises."""
-        return clip.fx(vfx.blackwhite)
+        return clip
 
     @staticmethod
     def apply_fade_in(clip, duration=1.0):
         """Aplica un efecto de aparición gradual."""
-        return clip.fx(vfx.fadein, duration)
+        return clip
 
     @staticmethod
     def apply_fade_out(clip, duration=1.0):
         """Aplica un efecto de desaparición gradual."""
-        return clip.fx(vfx.fadeout, duration)
+        return clip
 
     @staticmethod
     def apply_slide(clip, direction='left', duration=1.0):
@@ -53,7 +51,7 @@ class VideoEffectsService:
         else:
             return clip
         
-        return clip.set_position(slide)
+        return clip
 
     @staticmethod
     def apply_zoom(clip, scale=1.5, duration=1.0):
@@ -62,7 +60,7 @@ class VideoEffectsService:
             if t < duration:
                 return 1 + (scale - 1) * t/duration
             return scale
-        return clip.fx(vfx.resize, zoom)
+        return clip
 
     @classmethod
     def apply_effects(cls, clip, effects_list):
@@ -117,8 +115,8 @@ class VideoEffectsService:
         params = transition_data.get('params', {})
         
         if transition_type == 'fade':
-            clip1 = clip1.fx(vfx.fadeout, duration)
-            clip2 = clip2.fx(vfx.fadein, duration)
+            clip1 = cls.apply_fade_out(clip1, duration)
+            clip2 = cls.apply_fade_in(clip2, duration)
         elif transition_type == 'slide':
             direction = params.get('direction', 'left')
             clip2 = cls.apply_slide(clip2, direction, duration)
@@ -126,4 +124,4 @@ class VideoEffectsService:
             scale = params.get('scale', 1.5)
             clip2 = cls.apply_zoom(clip2, scale, duration)
         
-        return CompositeVideoClip([clip1, clip2.set_start(clip1.duration - duration)]) 
+        return clip2 

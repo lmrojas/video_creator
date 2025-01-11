@@ -1,0 +1,150 @@
+{% extends 'video_app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="scene-editor">
+    <!-- Barra de herramientas -->
+    <div class="toolbar">
+        <div class="btn-group">
+            <button class="btn btn-primary" id="add-text">
+                <i class="fas fa-font"></i> Texto
+            </button>
+            <button class="btn btn-primary" id="add-image">
+                <i class="fas fa-image"></i> Imagen
+            </button>
+            <button class="btn btn-primary" id="add-video">
+                <i class="fas fa-video"></i> Video
+            </button>
+            <button class="btn btn-primary" id="add-shape">
+                <i class="fas fa-shapes"></i> Forma
+            </button>
+        </div>
+        
+        <div class="btn-group ms-2">
+            <button class="btn btn-secondary" id="undo">
+                <i class="fas fa-undo"></i>
+            </button>
+            <button class="btn btn-secondary" id="redo">
+                <i class="fas fa-redo"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Área de edición -->
+    <div class="editor-container">
+        <div class="canvas-container">
+            <canvas id="scene-canvas"></canvas>
+        </div>
+        
+        <!-- Panel de propiedades -->
+        <div class="properties-panel">
+            <h5>Propiedades</h5>
+            <div id="element-properties">
+                <div class="mb-3">
+                    <label class="form-label">Posición X</label>
+                    <input type="number" class="form-control" id="pos-x">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Posición Y</label>
+                    <input type="number" class="form-control" id="pos-y">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ancho</label>
+                    <input type="number" class="form-control" id="width">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Alto</label>
+                    <input type="number" class="form-control" id="height">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Rotación</label>
+                    <input type="number" class="form-control" id="rotation">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Línea de tiempo -->
+    <div class="timeline">
+        <div class="timeline-header">
+            <div class="time-markers"></div>
+        </div>
+        <div class="timeline-tracks">
+            <!-- Las pistas se agregarán dinámicamente -->
+        </div>
+        <div class="timeline-controls">
+            <button class="btn btn-sm btn-primary" id="play">
+                <i class="fas fa-play"></i>
+            </button>
+            <span id="current-time">00:00</span>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.scene-editor {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+}
+
+.toolbar {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.editor-container {
+    display: flex;
+    flex: 1;
+}
+
+.canvas-container {
+    flex: 1;
+    background: #f5f5f5;
+    position: relative;
+}
+
+#scene-canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.properties-panel {
+    width: 300px;
+    padding: 15px;
+    border-left: 1px solid #ddd;
+    background: white;
+}
+
+.timeline {
+    height: 200px;
+    border-top: 1px solid #ddd;
+    background: #f8f9fa;
+    padding: 10px;
+}
+
+.timeline-tracks {
+    height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    background: white;
+}
+
+.timeline-controls {
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'video_app/js/scene_editor.js' %}"></script>
+{% endblock %}
+{% endblock %} 

@@ -1,17 +1,34 @@
 from django import forms
-from ..models import VideoProject, AudioElement
+from ..models import VideoProject
 
 class VideoProjectForm(forms.ModelForm):
-    """Formulario para edición de proyectos"""
+    """Formulario para la edición de proyectos de video."""
+    
     class Meta:
         model = VideoProject
-        fields = ['title', 'description', 'script', 'base_media', 'template']
+        fields = ['title', 'description', 'template', 'script', 'base_media']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'script': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
-            'base_media': forms.FileInput(attrs={'class': 'form-control'}),
-            'template': forms.Select(attrs={'class': 'form-select'})
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Título del proyecto'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Descripción del proyecto'
+            }),
+            'template': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'script': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 8,
+                'placeholder': 'Script del video'
+            }),
+            'base_media': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'video/*,image/*'
+            })
         }
     
     def clean_base_media(self):
@@ -28,46 +45,3 @@ class VideoProjectForm(forms.ModelForm):
                 raise forms.ValidationError('Tipo de archivo no permitido')
         
         return media 
-
-class TTSGenerationForm(forms.ModelForm):
-    """Formulario para generar audio usando TTS."""
-    
-    class Meta:
-        model = AudioElement
-        fields = ['text_content', 'voice_id', 'start_time', 'end_time', 'volume']
-        widgets = {
-            'text_content': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Ingrese el texto que desea convertir a voz...'
-            }),
-            'voice_id': forms.Select(attrs={'class': 'form-control'}),
-            'start_time': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.1',
-                'min': '0'
-            }),
-            'end_time': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.1',
-                'min': '0'
-            }),
-            'volume': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.1',
-                'min': '0',
-                'max': '2'
-            })
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['voice_id'].widget.choices = [
-            ('es_female', 'Español (Mujer)'),
-            ('en_female', 'Inglés (Mujer)')
-        ]
-        self.fields['voice_id'].label = 'Voz'
-        self.fields['text_content'].label = 'Texto'
-        self.fields['start_time'].label = 'Tiempo de inicio (segundos)'
-        self.fields['end_time'].label = 'Tiempo de fin (segundos)'
-        self.fields['volume'].label = 'Volumen (0.0 - 2.0)' 

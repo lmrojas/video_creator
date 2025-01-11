@@ -1,25 +1,22 @@
 from django.contrib import admin
-from .models import VideoProject, VideoTemplate, VideoScene, VideoElement
+from .models import VideoProject, VideoTemplate, VideoProcessingTask
 
 @admin.register(VideoProject)
 class VideoProjectAdmin(admin.ModelAdmin):
-    list_display = ['title', 'user', 'created_at', 'updated_at']
-    search_fields = ['title', 'description']
+    list_display = ('title', 'user', 'status', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('title', 'description', 'user__username')
+    date_hierarchy = 'created_at'
 
 @admin.register(VideoTemplate)
 class VideoTemplateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'difficulty_level']
-    list_filter = ['category', 'difficulty_level', 'industry']
-    search_fields = ['name', 'description']
+    list_display = ('name', 'category', 'difficulty_level')
+    list_filter = ('category', 'difficulty_level')
+    search_fields = ('name', 'description')
 
-@admin.register(VideoScene)
-class VideoSceneAdmin(admin.ModelAdmin):
-    list_display = ['project', 'order', 'duration']
-    list_filter = ['project']
-    ordering = ['project', 'order']
-
-@admin.register(VideoElement)
-class VideoElementAdmin(admin.ModelAdmin):
-    list_display = ['scene', 'element_type', 'start_time']
-    list_filter = ['element_type', 'scene__project']
-    search_fields = ['content']
+@admin.register(VideoProcessingTask)
+class VideoProcessingTaskAdmin(admin.ModelAdmin):
+    list_display = ('project', 'status', 'progress', 'started_at', 'completed_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('project__title', 'error_message')
+    date_hierarchy = 'created_at'

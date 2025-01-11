@@ -1,0 +1,106 @@
+{% extends 'video_app/wizard/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block wizard_content %}
+<h2 class="mb-4">Selección de Template</h2>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    Elige un template que se ajuste a tu proyecto. Puedes filtrar por categoría y nivel de dificultad.
+</div>
+
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            {{ form.category|as_crispy_field }}
+        </div>
+        <div class="col-md-4">
+            {{ form.difficulty_level|as_crispy_field }}
+        </div>
+    </div>
+
+    <div class="row">
+        {% for template in templates %}
+        <div class="col-md-4 mb-4 template-card" 
+             data-category="{{ template.category }}"
+             data-difficulty="{{ template.difficulty_level }}">
+            <div class="card h-100">
+                {% if template.preview_image %}
+                <img src="{{ template.preview_image.url }}" class="card-img-top" alt="{{ template.name }}">
+                {% else %}
+                <div class="card-img-top bg-light text-center py-5">
+                    <i class="fas fa-film fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ template.name }}</h5>
+                    <p class="card-text">{{ template.description|truncatewords:20 }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">{{ template.get_category_display }}</span>
+                        <span class="badge bg-info">{{ template.get_difficulty_level_display }}</span>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <div class="form-check">
+                        <input type="radio" name="template" value="{{ template.id }}"
+                               class="form-check-input" id="template_{{ template.id }}"
+                               {% if form.template.value == template.id %}checked{% endif %}>
+                        <label class="form-check-label" for="template_{{ template.id }}">
+                            Seleccionar este template
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4 d-flex justify-content-between">
+        <a href="{% url 'video_app:video_wizard_basic_info' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Anterior
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.querySelector('#id_category');
+        const difficultySelect = document.querySelector('#id_difficulty_level');
+        const templateCards = document.querySelectorAll('.template-card');
+        
+        function filterTemplates() {
+            const selectedCategory = categorySelect.value;
+            const selectedDifficulty = difficultySelect.value;
+            
+            templateCards.forEach(card => {
+                const category = card.dataset.category;
+                const difficulty = card.dataset.difficulty;
+                
+                const categoryMatch = !selectedCategory || category === selectedCategory;
+                const difficultyMatch = !selectedDifficulty || difficulty === selectedDifficulty;
+                
+                if (categoryMatch && difficultyMatch) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        categorySelect.addEventListener('change', filterTemplates);
+        difficultySelect.addEventListener('change', filterTemplates);
+    });
+</script>
+{% endblock %} 

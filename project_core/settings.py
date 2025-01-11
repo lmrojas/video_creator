@@ -38,13 +38,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Apps propias
-    'video_app',
-    # Apps de terceros
-    'channels',
-    'crispy_forms',
-    'crispy_bootstrap5',
-    'rest_framework',
+    "channels",
+    "rest_framework",
+    "crispy_forms",
+    "crispy_bootstrap5",
+    "video_app.apps.VideoAppConfig",
 ]
 
 MIDDLEWARE = [
@@ -87,7 +85,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'video_creator_db',
         'USER': 'postgres',
-        'PASSWORD': 'admin',
         'HOST': 'localhost',
         'PORT': '5432',
     }

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Barra de progreso lateral -->
+            <div class="list-group">
+                <a href="{% url 'video_app:video_wizard_basic_info' %}" 
+                   class="list-group-item {% if current_step == 1 %}active{% endif %} 
+                          {% if current_step < 1 %}disabled{% endif %}">
+                    1. Información Básica
+                </a>
+                <a href="{% url 'video_app:video_wizard_template' %}" 
+                   class="list-group-item {% if current_step == 2 %}active{% endif %}
+                          {% if current_step < 2 %}disabled{% endif %}">
+                    2. Selección de Template
+                </a>
+                <a href="{% url 'video_app:video_wizard_script' %}" 
+                   class="list-group-item {% if current_step == 3 %}active{% endif %}
+                          {% if current_step < 3 %}disabled{% endif %}">
+                    3. Script del Video
+                </a>
+                <a href="{% url 'video_app:video_wizard_media' %}" 
+                   class="list-group-item {% if current_step == 4 %}active{% endif %}
+                          {% if current_step < 4 %}disabled{% endif %}">
+                    4. Subida de Medios
+                </a>
+                <a href="{% url 'video_app:video_wizard_confirmation' %}" 
+                   class="list-group-item {% if current_step == 5 %}active{% endif %}
+                          {% if current_step < 5 %}disabled{% endif %}">
+                    5. Confirmación
+                </a>
+            </div>
+
+            <!-- Progreso general -->
+            <div class="mt-4">
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {% widthratio current_step total_steps 100 %}%"
+                         aria-valuenow="{% widthratio current_step total_steps 100 %}"
+                         aria-valuemin="0" aria-valuemax="100">
+                        {% widthratio current_step total_steps 100 %}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <!-- Contenido del paso actual -->
+            <div class="card">
+                <div class="card-body">
+                    {% block wizard_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Deshabilitar enlaces de pasos futuros
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentStep = {{ current_step }};
+        const links = document.querySelectorAll('.list-group-item');
+        
+        links.forEach((link, index) => {
+            if (index + 1 > currentStep) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                });
+            }
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,122 @@
+{% extends 'video_app/wizard/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block wizard_content %}
+<h2 class="mb-4">Confirmación del Proyecto</h2>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    Revisa los detalles de tu proyecto antes de comenzar el procesamiento.
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Resumen del Proyecto</h5>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h6>Información Básica</h6>
+                <dl class="row">
+                    <dt class="col-sm-4">Título</dt>
+                    <dd class="col-sm-8">{{ project.title }}</dd>
+                    
+                    <dt class="col-sm-4">Descripción</dt>
+                    <dd class="col-sm-8">{{ project.description }}</dd>
+                </dl>
+            </div>
+            
+            <div class="col-md-6">
+                <h6>Template Seleccionado</h6>
+                <dl class="row">
+                    <dt class="col-sm-4">Nombre</dt>
+                    <dd class="col-sm-8">{{ project.template.name }}</dd>
+                    
+                    <dt class="col-sm-4">Categoría</dt>
+                    <dd class="col-sm-8">{{ project.template.get_category_display }}</dd>
+                    
+                    <dt class="col-sm-4">Dificultad</dt>
+                    <dd class="col-sm-8">{{ project.template.get_difficulty_level_display }}</dd>
+                </dl>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <div class="row">
+            <div class="col-12">
+                <h6>Script del Video</h6>
+                <div class="bg-light p-3 rounded">
+                    <pre class="mb-0" style="white-space: pre-wrap;">{{ project.script }}</pre>
+                </div>
+            </div>
+        </div>
+        
+        <hr>
+        
+        <div class="row">
+            <div class="col-12">
+                <h6>Medios Subidos</h6>
+                <div class="row">
+                    {% if project.base_media %}
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Medio Principal</h6>
+                                {% if project.base_media.url|lower|endswith:'.mp4' or project.base_media.url|lower|endswith:'.webm' %}
+                                <video src="{{ project.base_media.url }}" class="img-fluid rounded" controls></video>
+                                {% else %}
+                                <img src="{{ project.base_media.url }}" class="img-fluid rounded" alt="Medio principal">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Aquí se pueden mostrar los medios adicionales si se implementa -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            {{ form|crispy }}
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-between">
+        <a href="{% url 'video_app:video_wizard_media' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Anterior
+        </a>
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-check"></i> Finalizar y Procesar
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startProcessingCheckbox = document.querySelector('#{{ form.start_processing.id_for_label }}');
+        const notificationEmailInput = document.querySelector('#{{ form.notification_email.id_for_label }}');
+        const notificationEmailContainer = notificationEmailInput.closest('.form-group');
+        
+        function toggleNotificationEmail() {
+            if (startProcessingCheckbox.checked) {
+                notificationEmailContainer.style.display = '';
+            } else {
+                notificationEmailContainer.style.display = 'none';
+            }
+        }
+        
+        startProcessingCheckbox.addEventListener('change', toggleNotificationEmail);
+        toggleNotificationEmail();
+    });
+</script>
+{% endblock %} 

@@ -2,12 +2,23 @@ from typing import Dict, List
 import json
 from django.conf import settings
 import os
-from ..models import VideoTemplate, TEMPLATE_CATEGORIES
+from django.core.cache import cache
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
+from ..models import VideoTemplate
 
 class TemplateManager:
     """
     Gestor de plantillas de video que maneja la creación y gestión de plantillas predefinidas.
     """
+    
+    TEMPLATE_CATEGORIES = [
+        ('educational', _('Educativo')),
+        ('marketing', _('Marketing')),
+        ('social', _('Redes Sociales')),
+        ('business', _('Negocios')),
+        ('personal', _('Personal')),
+    ]
     
     DEFAULT_TRANSITIONS = {
         'fade': {
@@ -54,6 +65,59 @@ class TemplateManager:
             'params': {'duration': 1.0}
         }
     }
+
+    def __init__(self):
+        self.cache_key_prefix = 'template_manager'
+    
+    def get_all_templates(self):
+        """Obtener todas las plantillas."""
+        cache_key = f"{self.cache_key_prefix}_all_templates"
+        templates = cache.get(cache_key)
+        
+        if templates is None:
+            templates = VideoTemplate.objects.all()
+            cache.set(cache_key, templates, timeout=3600)  # Cache por 1 hora
+        
+        return templates
+    
+    def get_template_by_id(self, template_id):
+        """Obtener una plantilla por su ID."""
+        cache_key = f"{self.cache_key_prefix}_template_{template_id}"
+        template = cache.get(cache_key)
+        
+        if template is None:
+            template = VideoTemplate.objects.get(id=template_id)
+            cache.set(cache_key, template, timeout=3600)
+        
+        return template
+    
+    def filter_templates(self, category=None, difficulty_level=None, search_query=None):
+        """Filtrar plantillas por categoría, nivel de dificultad y búsqueda."""
+        templates = VideoTemplate.objects.all()
+        
+        if category:
+            templates = templates.filter(category=category)
+        
+        if difficulty_level:
+            templates = templates.filter(difficulty_level=difficulty_level)
+        
+        if search_query:
+            templates = templates.filter(
+                Q(name__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+        
+        return templates
+    
+    def get_template_preview(self, template_id):
+        """Obtener la vista previa de una plantilla."""
+        template = self.get_template_by_id(template_id)
+        return template.preview_image.url if template.preview_image else None
+    
+    def get_template_configuration(self, template_id):
+        """Obtener la configuración de una plantilla."""
+        template = self.get_template_by_id(template_id)
+        return template.configuration
 
     @classmethod
     def create_promotional_template(cls) -> Dict:

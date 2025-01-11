@@ -1,0 +1,31 @@
+{% extends 'video_app/wizard/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block wizard_content %}
+<h2 class="mb-4">Información Básica del Proyecto</h2>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    Comienza proporcionando la información básica de tu proyecto de video.
+    Esta información nos ayudará a generar un video más acorde a tus necesidades.
+</div>
+
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    
+    <div class="row">
+        <div class="col-md-12">
+            {{ form|crispy }}
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-between">
+        <a href="{% url 'video_app:project_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</form>
+{% endblock %} 

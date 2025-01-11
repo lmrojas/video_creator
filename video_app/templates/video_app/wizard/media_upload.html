@@ -1,0 +1,262 @@
+{% extends 'video_app/wizard/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block wizard_content %}
+<h2 class="mb-4">Subida de Medios</h2>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    Sube los archivos multimedia que se utilizarán en tu video. Puedes subir imágenes,
+    videos y archivos de audio.
+</div>
+
+<form method="post" enctype="multipart/form-data" class="mt-4">
+    {% csrf_token %}
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Medio Principal</h5>
+            
+            <div class="mb-4">
+                <div class="upload-preview" id="baseMediaPreview">
+                    <div class="text-center py-5 bg-light rounded">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                        <p class="mt-2">Arrastra aquí tu archivo principal o haz clic para seleccionar</p>
+                    </div>
+                </div>
+                {{ form.base_media|as_crispy_field }}
+            </div>
+            
+            <hr>
+            
+            <h5 class="card-title mb-4">Medios Adicionales</h5>
+            
+            <div class="mb-4">
+                <div class="upload-preview" id="additionalMediaPreview">
+                    <div class="text-center py-5 bg-light rounded">
+                        <i class="fas fa-plus-circle fa-3x text-muted"></i>
+                        <p class="mt-2">Arrastra aquí tus archivos adicionales o haz clic para seleccionar</p>
+                    </div>
+                </div>
+                {{ form.additional_media|as_crispy_field }}
+            </div>
+            
+            <div id="uploadedFiles" class="row">
+                <!-- Los archivos subidos se mostrarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-between">
+        <a href="{% url 'video_app:video_wizard_script' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Anterior
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .upload-preview {
+        border: 2px dashed #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-preview:hover {
+        border-color: #007bff;
+    }
+    
+    .upload-preview.dragover {
+        border-color: #28a745;
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+    
+    .preview-item {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .preview-item .remove-file {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        padding: 0.25rem;
+        cursor: pointer;
+    }
+    
+    .preview-thumbnail {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const baseMediaInput = document.querySelector('#{{ form.base_media.id_for_label }}');
+        const additionalMediaInput = document.querySelector('#{{ form.additional_media.id_for_label }}');
+        const basePreview = document.querySelector('#baseMediaPreview');
+        const additionalPreview = document.querySelector('#additionalMediaPreview');
+        const uploadedFiles = document.querySelector('#uploadedFiles');
+        
+        // Configurar drag & drop para el medio principal
+        setupDragAndDrop(basePreview, baseMediaInput, true);
+        
+        // Configurar drag & drop para medios adicionales
+        setupDragAndDrop(additionalPreview, additionalMediaInput, false);
+        
+        // Manejar cambios en los inputs de archivo
+        baseMediaInput.addEventListener('change', function(e) {
+            handleFileSelect(e, true);
+        });
+        
+        additionalMediaInput.addEventListener('change', function(e) {
+            handleFileSelect(e, false);
+        });
+        
+        function setupDragAndDrop(dropZone, input, isSingle) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('dragover');
+                });
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('dragover');
+                });
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (isSingle) {
+                    const dT = new DataTransfer();
+                    dT.items.add(files[0]);
+                    input.files = dT.files;
+                    input.dispatchEvent(new Event('change'));
+                } else {
+                    const dT = new DataTransfer();
+                    Array.from(files).forEach(file => dT.items.add(file));
+                    input.files = dT.files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            dropZone.addEventListener('click', () => {
+                input.click();
+            });
+        }
+        
+        function handleFileSelect(e, isSingle) {
+            const files = e.target.files;
+            
+            if (isSingle) {
+                if (files.length > 0) {
+                    const file = files[0];
+                    showPreview(file, basePreview);
+                }
+            } else {
+                uploadedFiles.innerHTML = '';
+                Array.from(files).forEach(file => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-4';
+                    col.innerHTML = createPreviewItem(file);
+                    uploadedFiles.appendChild(col);
+                });
+            }
+        }
+        
+        function showPreview(file, container) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                let preview;
+                if (file.type.startsWith('image/')) {
+                    preview = `<img src="${e.target.result}" class="preview-thumbnail">`;
+                } else if (file.type.startsWith('video/')) {
+                    preview = `<video src="${e.target.result}" class="preview-thumbnail" controls></video>`;
+                } else if (file.type.startsWith('audio/')) {
+                    preview = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-music fa-3x"></i>
+                            <p class="mt-2">${file.name}</p>
+                            <audio src="${e.target.result}" controls></audio>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = preview;
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        function createPreviewItem(file) {
+            return `
+                <div class="preview-item">
+                    <i class="fas fa-times remove-file"></i>
+                    ${getPreviewContent(file)}
+                    <p class="text-center mt-2">${file.name}</p>
+                </div>
+            `;
+        }
+        
+        function getPreviewContent(file) {
+            if (file.type.startsWith('image/')) {
+                return `<img src="${URL.createObjectURL(file)}" class="preview-thumbnail">`;
+            } else if (file.type.startsWith('video/')) {
+                return `<video src="${URL.createObjectURL(file)}" class="preview-thumbnail" controls></video>`;
+            } else if (file.type.startsWith('audio/')) {
+                return `
+                    <div class="text-center py-4">
+                        <i class="fas fa-music fa-3x"></i>
+                        <audio src="${URL.createObjectURL(file)}" controls></audio>
+                    </div>
+                `;
+            }
+        }
+        
+        // Manejar eliminación de archivos
+        uploadedFiles.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-file')) {
+                const item = e.target.closest('.preview-item');
+                const col = item.closest('.col-md-4');
+                const fileName = item.querySelector('p').textContent;
+                
+                // Eliminar el archivo del input
+                const newFiles = Array.from(additionalMediaInput.files).filter(file => file.name !== fileName);
+                const dT = new DataTransfer();
+                newFiles.forEach(file => dT.items.add(file));
+                additionalMediaInput.files = dT.files;
+                
+                // Eliminar la vista previa
+                col.remove();
+            }
+        });
+    });
+</script>
+{% endblock %} 

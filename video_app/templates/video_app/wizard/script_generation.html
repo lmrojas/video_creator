@@ -1,0 +1,75 @@
+{% extends 'video_app/wizard/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block wizard_content %}
+<h2 class="mb-4">Script del Video</h2>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    Puedes generar automáticamente un script basado en la información de tu proyecto
+    o escribir tu propio script manualmente.
+</div>
+
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="form-check mb-3">
+                {{ form.generate_script }}
+                <label class="form-check-label" for="{{ form.generate_script.id_for_label }}">
+                    Generar script automáticamente
+                </label>
+            </div>
+            
+            <div id="generationOptions" class="row mb-3">
+                <div class="col-md-6">
+                    {{ form.style|as_crispy_field }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.target_duration|as_crispy_field }}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                {{ form.script|as_crispy_field }}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex justify-content-between">
+        <a href="{% url 'video_app:video_wizard_template' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Anterior
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const generateCheckbox = document.querySelector('#{{ form.generate_script.id_for_label }}');
+        const generationOptions = document.querySelector('#generationOptions');
+        const scriptTextarea = document.querySelector('#{{ form.script.id_for_label }}');
+        
+        function toggleGenerationOptions() {
+            if (generateCheckbox.checked) {
+                generationOptions.style.display = '';
+                scriptTextarea.readOnly = true;
+                scriptTextarea.placeholder = 'El script se generará automáticamente cuando continúes al siguiente paso...';
+            } else {
+                generationOptions.style.display = 'none';
+                scriptTextarea.readOnly = false;
+                scriptTextarea.placeholder = 'Escribe tu script aquí...';
+            }
+        }
+        
+        generateCheckbox.addEventListener('change', toggleGenerationOptions);
+        toggleGenerationOptions(); // Ejecutar al cargar
+    });
+</script>
+{% endblock %} 
